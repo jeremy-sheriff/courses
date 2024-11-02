@@ -1,12 +1,15 @@
 package org.app.courses.models
 
 import jakarta.persistence.*
-import org.hibernate.validator.constraints.UUID
+import java.util.*
 
-open class Unit(
+
+@Table(name = "units")
+@Entity
+open class Units(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open var id:UUID?,
+    @GeneratedValue(generator = "UUID")
+    open var uuid: UUID,
 
     @Column(name = "name", nullable = false)
     open var name: String,
@@ -14,7 +17,7 @@ open class Unit(
     @Column(name = "courseId", nullable = false)
     open var courseId: Long,
 ){
-    constructor() : this(null,"",1) {
+    constructor() : this(UUID.randomUUID(),"",1) {
 
     }
 }
