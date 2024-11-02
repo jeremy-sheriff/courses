@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("api/departments")
-@CrossOrigin("http://localhost:3000")
+@CrossOrigin(origins = ["http://localhost:4200","https://muhohodev.com"])
 class DepartmentsController(
     private val departmentService: DepartmentService
 ){

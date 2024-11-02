@@ -7,7 +7,15 @@ import org.app.courses.models.Course
 import org.app.courses.models.CourseEnrollment
 import org.app.courses.repositories.CourseEnrollmentRepository
 import org.app.courses.repositories.CourseRepository
+import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import org.app.courses.dto.UserDto
+import org.slf4j.LoggerFactory
+import java.util.UUID
 
 @Service
 class CourseService(
@@ -16,8 +24,46 @@ class CourseService(
     private val courseEnrollmentRepository: CourseEnrollmentRepository,
 ){
 
-    fun getAllCourses():MutableList<Course>{
+    private val logger = LoggerFactory.getLogger(CourseService::class.java)
+
+
+    fun getAllCourses(page: Int, size: Int): Page<Course> {
+        val pageable = PageRequest.of(page, size)
+        return courseRepository.findAll(pageable)
+    }
+
+    fun getUnpaginatedCourses(): MutableList<Course> {
         return courseRepository.findAll()
+    }
+
+    @SqsListener("\${aws.sqs.queueUrl}")
+    fun receiveMessage(message: String) {
+        println("Received message: $message")
+
+        val objectMapper = jacksonObjectMapper()
+        try {
+            // Parse the JSON string to the StudentMessage data class
+            val studentMessage: UserDto = objectMapper.readValue(message)
+
+            // Extract individual variables
+            val id = studentMessage.id
+            val name = studentMessage.name
+            val admNo = studentMessage.admNo
+            val course = studentMessage.course
+
+            val courseEnrollmentDto = CourseEnrollmentDto(
+                id = null,  // Assuming id is auto-generated for new enrollments
+                studentId = id,  // Use admission number as student ID
+                courseId = course   // Use course ID as provided
+            )
+
+            // Call enrollStudent with the CourseEnrollmentDto
+            enrollStudent(courseEnrollmentDto)
+
+          logger.info("Student with id: $id, name: $name, admNo: $admNo, course: $course")
+        } catch (e: Exception) {
+            println("Error parsing message: ${e.message}")
+        }
     }
 
     fun saveCourse(courseDto: CourseDto){
@@ -72,17 +118,23 @@ class CourseService(
         }
     }
 
-    fun getStudentCourse(studentId: String): MutableList<CourseDepartmentDto> {
+    fun getStudentCourse(studentId: UUID): MutableList<CourseDepartmentDto> {
         val response = mutableListOf<CourseDepartmentDto>()
-        courseRepository.getStudentCourse(studentId).forEach { course->
-            if (course is Array<*>){
+        courseRepository.getStudentCourse(studentId).firstOrNull()?.let { course ->
+            logger.info("Course is $course")
+            if (course is Array<*> && course.size >= 2) {
                 val courseName = course[0].toString()
                 val departmentName = course[1].toString()
-
-                val courseDepartmentDto = CourseDepartmentDto(courseName,departmentName)
+                val courseDepartmentDto = CourseDepartmentDto(courseName, departmentName)
                 response.add(courseDepartmentDto)
             }
         }
         return response
+    }
+
+
+
+    fun getCourseTakenByStudent(studentId: String){
+
     }
 }

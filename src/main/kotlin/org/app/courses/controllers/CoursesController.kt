@@ -9,23 +9,33 @@ import org.app.courses.services.CourseService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.data.domain.Page
+import java.util.UUID
 
 @RestController
 @RequestMapping("api/courses")
-@CrossOrigin("http://localhost:3000")
-@PreAuthorize("hasAnyAuthority('courses_role')")
+@CrossOrigin(origins = ["http://localhost:4200","https://muhohodev.com"])
+@PreAuthorize("hasAnyAuthority('course_role')")
 class CoursesController(
  private val courseService: CourseService
 ) {
 
     @GetMapping("")
-    fun getAllCourses():MutableList<Course>{
-        return courseService.getAllCourses()
+    fun getAllCourses(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int
+    ):Page<Course>{
+        return courseService.getAllCourses(page,size)
+    }
+
+    @GetMapping("un-paginated")
+    fun getCoursesWithoutPagination():MutableList<Course>{
+        return courseService.getUnpaginatedCourses()
     }
 
     @GetMapping("student/{studentId}")
     fun getStudentCourse(
-        @PathVariable studentId: String): MutableList<CourseDepartmentDto> {
+        @PathVariable studentId: UUID): MutableList<CourseDepartmentDto> {
         return courseService.getStudentCourse(studentId)
     }
 

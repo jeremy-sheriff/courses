@@ -12,18 +12,22 @@ import org.springframework.stereotype.Component
 @Component
 class JwtAuthConverter : Converter<Jwt, AbstractAuthenticationToken> {
 
-//    @Value("\${spring.application.foo}")
-    private val serviceName = "students-service"
-
-    private val claims = "resource_access"
-
-
     override fun convert(jwt: Jwt): AbstractAuthenticationToken {
-        val resourceAccess = jwt.claims[claims] as? Map<*, *> ?: emptyMap<Any, Any>()
-        val roles = (resourceAccess[serviceName] as? Map<*, *>)?.get("roles") as? List<*> ?: emptyList<Any>()
-        val grantedAuthorities = roles
-            .mapNotNull { roleName -> roleName.toString().let { SimpleGrantedAuthority(it) } }
+        // Extract global roles from realm_access.roles
+        val globalRoles = (jwt.claims["realm_access"] as? Map<*, *>)?.get("roles") as? List<*>
+            ?: emptyList<Any>()
 
-        return JwtAuthenticationToken(jwt, grantedAuthorities)
+        // Extract resource-specific roles from resource_access.students-service.roles
+        val resourceAccess = jwt.claims["resource_access"] as? Map<*, *> ?: emptyMap<Any, Any>()
+        val serviceRoles = (resourceAccess["students-service"] as? Map<*, *>)?.get("roles") as? List<*>
+            ?: emptyList<Any>()
+
+        // Combine both sets of roles without prefix
+        val combinedRoles = (globalRoles + serviceRoles).mapNotNull { roleName ->
+            SimpleGrantedAuthority(roleName.toString())
+        }
+
+        // Create a JwtAuthenticationToken with the combined roles
+        return JwtAuthenticationToken(jwt, combinedRoles)
     }
 }
