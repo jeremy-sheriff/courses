@@ -37,4 +37,5 @@ jobs:
 
       # Step 5: Verify the Docker image
       - name: Image Digest
-        run: echo "Docker image pushed with digest: ${{ steps.build-and-push.outputs.digest }}"
+        run:
+          echo "Docker image pushed with digest: ${{ steps.build-and-push.outputs.digest }}"
