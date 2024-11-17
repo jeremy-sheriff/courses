@@ -1,27 +1,34 @@
-FROM openjdk:17-jdk-slim
+FROM gradle:7.5-jdk17 AS build
 
-# Set the working directory to /app
+# Set the working directory inside the container
 WORKDIR /app
 
-# Install wget and unzip (needed to download and extract Gradle)
-RUN apt-get update && \
-    apt-get install -y wget unzip
+# Copy build.gradle.kts and settings.gradle.kts to cache dependencies
+COPY build.gradle.kts settings.gradle.kts /app/
 
-# Copy the Gradle wrapper files and build.gradle.kts
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle.kts .
+# Download dependencies
+RUN gradle dependencies --no-daemon || true
 
-# Copy the source code
-COPY src src
+# Copy the rest of the source code
+COPY . /app
 
-# Download dependencies and build the application
-#RUN ./gradlew build
+# Build the application
+RUN gradle build --no-daemon -x test
 
-# Expose the port the app runs on
-EXPOSE 8081
 
-COPY build/libs/courses-0.0.1-SNAPSHOT.jar /app/courses.jar
+# Stage 2: Runtime
+FROM openjdk:17-jdk-slim
 
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the JAR from the build stage
+COPY --from=build /app/build/libs/courses-0.0.1-SNAPSHOT.jar /app/courses.jar
+
+# Expose the port
+EXPOSE 8080
+
+ENV SPRING_PROFILES_ACTIVE=prod
 # Run the application
 CMD ["java", "-jar", "courses.jar"]
+

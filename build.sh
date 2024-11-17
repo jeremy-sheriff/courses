@@ -55,9 +55,9 @@ echo "New version: $new_version"
 
 # Export the Docker image name as an environment variable
 
-# Run your build commands
-./gradlew clean &&
-./gradlew build -x test &&
+## Run your build commands
+#./gradlew clean &&
+#./gradlew build -x test &&
 docker build --platform linux/amd64 -t muhohoweb/course-image:"$new_version" . &&
 docker push muhohoweb/course-image:"$new_version" &&
 
