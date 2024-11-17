@@ -53,15 +53,8 @@ echo "$new_version" > VERSION
 # Output the new version for visibility
 echo "New version: $new_version"
 
-# Export the Docker image name as an environment variable
-
-## Run your build commands
-#./gradlew clean &&
-#./gradlew build -x test &&
-docker build --platform linux/amd64 -t muhohoweb/course-image:"$new_version" . &&
-docker push muhohoweb/course-image:"$new_version" &&
-
 # Git add, commit, and push
+git add . &&
 git add VERSION &&
 git commit -m " Push new image version : $new_version" &&
 git push origin main &&
