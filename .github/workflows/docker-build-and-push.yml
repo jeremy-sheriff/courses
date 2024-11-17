@@ -36,6 +36,6 @@ jobs:
             muhohoweb/courses:${{ github.sha }}
 
       # Step 5: Verify the Docker image
-      - name: Image Digest
-        run:
-          echo "Docker image pushed with digest: ${{ steps.build-and-push.outputs.digest }}"
+#      - name: Image Digest
+#        run:
+#          echo "Docker image pushed with digest: ${{ steps.build-and-push.outputs.digest }}"
