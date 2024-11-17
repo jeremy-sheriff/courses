@@ -19,14 +19,9 @@ jobs:
       - name: Extract Git Tag
         id: extract_tag
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-            echo "TAG=$TAG"
-            echo "tag=$TAG" >> $GITHUB_ENV
-          else
-            echo "No valid Git tag found."
-            exit 1  # Fail the workflow if no tag is found
-          fi
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "TAG=$TAG"
+          echo "tag=$TAG" >> $GITHUB_ENV
 
       # Step 3: Log in to Docker Hub
       - name: Log in to Docker Hub
@@ -45,5 +40,4 @@ jobs:
         with:
           push: true
           tags: |
-            muhohoweb/course-image:${{ env.TAG }}
             muhohoweb/course-image:latest  # Optionally keep a "latest" tag
