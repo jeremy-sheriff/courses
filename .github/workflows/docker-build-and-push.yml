@@ -34,7 +34,6 @@ jobs:
           push: true  # Push the image to Docker Hub
           tags: |
             muhohoweb/course-image:latest
-#            muhohoweb/course-image:${{ github.sha }}
             muhohoweb/course-image:latest
 
       # Step 5: Verify the Docker image
